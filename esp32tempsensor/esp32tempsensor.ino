@@ -26,9 +26,83 @@ float Humidity;
 float temp1;
 float temp2;
 float temp3;
+
+
+const int pinButton = 2; //pino do botão1
+const int pinButton2 = 15; //pino do botão1
+
+hw_timer_t * timer0 = NULL;
+hw_timer_t * timer1 = NULL;
+portMUX_TYPE timerMux0 = portMUX_INITIALIZER_UNLOCKED;
+portMUX_TYPE timerMux1 = portMUX_INITIALIZER_UNLOCKED;
+
+volatile uint8_t led1stat = 0; 
+volatile uint8_t led2stat = 0; 
+
+void IRAM_ATTR onTimer0(){
+  // Critical Code here
+  portENTER_CRITICAL_ISR(&timerMux0);
+  led1stat=1-led1stat;
+  digitalWrite(16, led1stat);   // turn the LED on or off
+  portEXIT_CRITICAL_ISR(&timerMux0);
+}
+
+void IRAM_ATTR onTimer1(){
+  // Critical Code here
+  portENTER_CRITICAL_ISR(&timerMux1);
+  led2stat=1-led2stat;
+  digitalWrite(17, led2stat);   // turn the LED on or off
+  portEXIT_CRITICAL_ISR(&timerMux1);
+}
+
+void botao1(){
+  lcd.clear();// clear previous values from screen
+  temp3 = dht.readTemperature();
+  lcd.setCursor(0,1);
+  lcd.print(temp3);
+  lcd.setCursor(4,1);
+  lcd.print("  ");
+  lcd.setCursor(6,1);
+  lcd.print(temp2);
+  lcd.setCursor(10,1);
+  lcd.print("  ");
+  lcd.setCursor(12,1);
+  lcd.print(temp1);
+}
+
+void botao2() {
+  lcd.clear();
+  delay(3000);
+  temp1=0;
+  temp2=0;
+  lcd.setCursor(0,1);
+  lcd.print(dht.readTemperature());
+}
  
 void setup() {
   Serial.begin(115200);
+  pinMode(pinButton, INPUT_PULLUP);
+  pinMode(pinButton2, INPUT_PULLUP);
+  pinMode(17, OUTPUT);
+  pinMode(16, OUTPUT);
+  digitalWrite(17, LOW);    // turn the LED off by making the voltage LOW
+  digitalWrite(16, LOW);    // turn the LED off by making the voltage LOW
+
+  Serial.println("start timer 1");
+  timer1 = timerBegin(1, 80, true);  // timer 1, MWDT clock period = 12.5 ns * TIMGn_Tx_WDT_CLK_PRESCALE -> 12.5 ns * 80 -> 1000 ns = 1 us, countUp
+  timerAttachInterrupt(timer1, &onTimer1, true); // edge (not level) triggered 
+  timerAlarmWrite(timer1, 250000, true); // 250000 * 1 us = 250 ms, autoreload true
+
+  Serial.println("start timer 0");
+  timer0 = timerBegin(0, 80, true);  // timer 0, MWDT clock period = 12.5 ns * TIMGn_Tx_WDT_CLK_PRESCALE -> 12.5 ns * 80 -> 1000 ns = 1 us, countUp
+  timerAttachInterrupt(timer0, &onTimer0, true); // edge (not level) triggered 
+  timerAlarmWrite(timer0, 2000000, true); // 2000000 * 1 us = 2 s, autoreload true
+
+  // at least enable the timer alarms
+  timerAlarmEnable(timer0); // enable
+  timerAlarmEnable(timer1); // enable
+
+  //cod TIMERFIM
   delay(100);
   
   pinMode(DHTPin, INPUT);
@@ -98,7 +172,22 @@ void loop() {
   //lcd.noDisplay();
   //delay(30000);
   //lcd.print(Temperature);
-  
+  //cODIGO TIMER
+  //vTaskDelay(portMAX_DELAY); // wait as much as posible ...
+
+  //Botao1
+      while(digitalRead(pinButton))
+    {
+        Serial.println("botão 1 pressionado!");
+        botao1();
+        //delay(100);
+    }
+          while(digitalRead(pinButton2))
+    {
+        Serial.println("botão 2 pressionado!");
+        botao2();
+        //delay(100);
+    }
 }
 
 void printTemp() {
