@@ -23,6 +23,9 @@ DHT dht(DHTPin, DHTTYPE);
 
 float Temperature;
 float Humidity;
+float temp1;
+float temp2;
+float temp3;
  
 void setup() {
   Serial.begin(115200);
@@ -71,19 +74,37 @@ void loop() {
   else {
     digitalWrite(5, LOW); }
 */
-  lcd.display();
+  //lcd.display();
   lcd.clear();// clear previous values from screen
   lcd.print("Temperatura");
   lcd.setCursor(12,0);
   lcd.print(dht.readTemperature());
+  printTemp();
+//  lcd.setCursor(0,1);
+//  lcd.print("Umidade:");
+//  lcd.setCursor(12,1);
+//  lcd.print(dht.readHumidity());
   lcd.setCursor(0,1);
-  lcd.print("Umidade:");
+  lcd.print(temp3);
+  lcd.setCursor(4,1);
+  lcd.print("  ");
+  lcd.setCursor(6,1);
+  lcd.print(temp2);
+  lcd.setCursor(10,1);
+  lcd.print("  ");
   lcd.setCursor(12,1);
-  lcd.print(dht.readHumidity());
+  lcd.print(temp1);
   delay(10000);
-  lcd.noDisplay();
-  delay(30000);
+  //lcd.noDisplay();
+  //delay(30000);
+  //lcd.print(Temperature);
   
+}
+
+void printTemp() {
+temp1 = temp2;
+temp2 = temp3;
+temp3 = dht.readTemperature();
 }
 
 void handle_OnConnect() {
