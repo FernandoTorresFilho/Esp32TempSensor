@@ -57,7 +57,11 @@ void IRAM_ATTR onTimer1(){
 
 void botao1(){
   lcd.clear();// clear previous values from screen
+  lcd.setCursor(0,0);
+  lcd.print("BOTÃO LER AGORA!");
   temp3 = dht.readTemperature();
+  temp2 = 0.00;
+  temp1 = 0.00;
   lcd.setCursor(0,1);
   lcd.print(temp3);
   lcd.setCursor(4,1);
@@ -68,15 +72,17 @@ void botao1(){
   lcd.print("  ");
   lcd.setCursor(12,1);
   lcd.print(temp1);
+  delay(3000);
 }
 
 void botao2() {
   lcd.clear();
-  delay(3000);
   temp1=0;
   temp2=0;
+  temp3=0;
   lcd.setCursor(0,1);
-  lcd.print(dht.readTemperature());
+  lcd.print("Painel RESETADO!");
+  delay(3000);
 }
  
 void setup() {
@@ -91,12 +97,12 @@ void setup() {
   Serial.println("start timer 1");
   timer1 = timerBegin(1, 80, true);  // timer 1, MWDT clock period = 12.5 ns * TIMGn_Tx_WDT_CLK_PRESCALE -> 12.5 ns * 80 -> 1000 ns = 1 us, countUp
   timerAttachInterrupt(timer1, &onTimer1, true); // edge (not level) triggered 
-  timerAlarmWrite(timer1, 250000, true); // 250000 * 1 us = 250 ms, autoreload true
+  timerAlarmWrite(timer1, 30000000, true); // 250000 * 1 us = 250 ms, autoreload true
 
   Serial.println("start timer 0");
   timer0 = timerBegin(0, 80, true);  // timer 0, MWDT clock period = 12.5 ns * TIMGn_Tx_WDT_CLK_PRESCALE -> 12.5 ns * 80 -> 1000 ns = 1 us, countUp
   timerAttachInterrupt(timer0, &onTimer0, true); // edge (not level) triggered 
-  timerAlarmWrite(timer0, 2000000, true); // 2000000 * 1 us = 2 s, autoreload true
+  timerAlarmWrite(timer0, 10000000, true); // 2000000 * 1 us = 2 s, autoreload true
 
   // at least enable the timer alarms
   timerAlarmEnable(timer0); // enable
@@ -178,13 +184,13 @@ void loop() {
   //Botao1
       while(digitalRead(pinButton))
     {
-        Serial.println("botão 1 pressionado!");
+        Serial.println("botão 1 pressionado = LER AGORA!");
         botao1();
         //delay(100);
     }
           while(digitalRead(pinButton2))
     {
-        Serial.println("botão 2 pressionado!");
+        Serial.println("botão 2 pressionado = BOTÃO RESET!");
         botao2();
         //delay(100);
     }
