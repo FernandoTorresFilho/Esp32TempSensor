@@ -98,7 +98,8 @@ void botao2() {
   lcd.print("  ");
   lcd.setCursor(12,1);
   lcd.print(temp1);
-  delay(3000);
+  timerWrite(timer0, 0); //reseta o temporizador0  
+  timerWrite(timer1, 0); //reseta o temporizador1  
 }
  
 void setup() {
