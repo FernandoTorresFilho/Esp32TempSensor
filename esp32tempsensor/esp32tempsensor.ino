@@ -26,7 +26,8 @@ float Humidity;
 float temp1;
 float temp2;
 float temp3;
-
+int i=0;
+int count=0;
 
 const int pinButton = 2; //pino do botão1
 const int pinButton2 = 15; //pino do botão1
@@ -36,29 +37,33 @@ hw_timer_t * timer1 = NULL;
 portMUX_TYPE timerMux0 = portMUX_INITIALIZER_UNLOCKED;
 portMUX_TYPE timerMux1 = portMUX_INITIALIZER_UNLOCKED;
 
-volatile uint8_t led1stat = 0; 
-volatile uint8_t led2stat = 0; 
-
 void IRAM_ATTR onTimer0(){
   // Critical Code here
   portENTER_CRITICAL_ISR(&timerMux0);
-  led1stat=1-led1stat;
-  digitalWrite(16, led1stat);   // turn the LED on or off
+  
+  Serial.println("TEMPORIZADOR LEITURA TEMP:");
+  i = 1;
+  Serial.println(i);
+  
   portEXIT_CRITICAL_ISR(&timerMux0);
 }
 
 void IRAM_ATTR onTimer1(){
   // Critical Code here
   portENTER_CRITICAL_ISR(&timerMux1);
-  led2stat=1-led2stat;
-  digitalWrite(17, led2stat);   // turn the LED on or off
+
+  Serial.println("TEMPORIZADOR BACKLIGHT OFF:");
+  count = 1;
+  Serial.println(count);
+  
   portEXIT_CRITICAL_ISR(&timerMux1);
 }
 
 void botao1(){
+  lcd.backlight();
   lcd.clear();// clear previous values from screen
   lcd.setCursor(0,0);
-  lcd.print("BOTÃO LER AGORA!");
+  lcd.print("BOTAO LER AGORA!");
   temp3 = dht.readTemperature();
   temp2 = 0.00;
   temp1 = 0.00;
@@ -76,12 +81,23 @@ void botao1(){
 }
 
 void botao2() {
+  lcd.backlight();
   lcd.clear();
   temp1=0;
   temp2=0;
   temp3=0;
-  lcd.setCursor(0,1);
+  lcd.setCursor(0,0);
   lcd.print("Painel RESETADO!");
+  lcd.setCursor(0,1);
+  lcd.print(temp3);
+  lcd.setCursor(4,1);
+  lcd.print("  ");
+  lcd.setCursor(6,1);
+  lcd.print(temp2);
+  lcd.setCursor(10,1);
+  lcd.print("  ");
+  lcd.setCursor(12,1);
+  lcd.print(temp1);
   delay(3000);
 }
  
@@ -89,22 +105,18 @@ void setup() {
   Serial.begin(115200);
   pinMode(pinButton, INPUT_PULLUP);
   pinMode(pinButton2, INPUT_PULLUP);
-  pinMode(17, OUTPUT);
-  pinMode(16, OUTPUT);
-  digitalWrite(17, LOW);    // turn the LED off by making the voltage LOW
-  digitalWrite(16, LOW);    // turn the LED off by making the voltage LOW
 
   Serial.println("start timer 1");
   timer1 = timerBegin(1, 80, true);  // timer 1, MWDT clock period = 12.5 ns * TIMGn_Tx_WDT_CLK_PRESCALE -> 12.5 ns * 80 -> 1000 ns = 1 us, countUp
   timerAttachInterrupt(timer1, &onTimer1, true); // edge (not level) triggered 
-  timerAlarmWrite(timer1, 30000000, true); // 250000 * 1 us = 250 ms, autoreload true
+  timerAlarmWrite(timer1, 10500000, true); // 250000 * 1 us = 250 ms, autoreload true
 
   Serial.println("start timer 0");
   timer0 = timerBegin(0, 80, true);  // timer 0, MWDT clock period = 12.5 ns * TIMGn_Tx_WDT_CLK_PRESCALE -> 12.5 ns * 80 -> 1000 ns = 1 us, countUp
   timerAttachInterrupt(timer0, &onTimer0, true); // edge (not level) triggered 
-  timerAlarmWrite(timer0, 10000000, true); // 2000000 * 1 us = 2 s, autoreload true
+  timerAlarmWrite(timer0, 30000000, true); // 2000000 * 1 us = 2 s, autoreload true
 
-  // at least enable the timer alarms
+//  // at least enable the timer alarms
   timerAlarmEnable(timer0); // enable
   timerAlarmEnable(timer1); // enable
 
@@ -115,7 +127,7 @@ void setup() {
 
   dht.begin();              
 
-  Serial.println("Connecting to ");
+  Serial.println("Conectando em ");
   Serial.println(ssid);
 
   //connect to your local wi-fi network
@@ -127,57 +139,56 @@ void setup() {
   Serial.print(".");
   }
   Serial.println("");
-  Serial.println("WiFi connected..!");
+  Serial.println("WiFi conectado...!");
   Serial.print("Got IP: ");  Serial.println(WiFi.localIP());
 
   server.on("/", handle_OnConnect);
   server.onNotFound(handle_NotFound);
 
   server.begin();
-  Serial.println("HTTP server started");
+  Serial.println("HTTP Server iniciado");
 
   lcd.begin();  
   lcd.backlight();
   lcd.print("Fernando Torres");
   lcd.setCursor(0,1);
-  lcd.print("Sensor Temperatura");  
+  lcd.print("Sensor Temp. C");  
   delay(2000); 
 }
 
 void loop() {
   server.handleClient();
-  
-/*pinMode(5, OUTPUT);
 
- if(Temperature > 28) {
-    digitalWrite(5, HIGH); }
-  else {
-    digitalWrite(5, LOW); }
-*/
-  //lcd.display();
-  lcd.clear();// clear previous values from screen
-  lcd.print("Temperatura");
-  lcd.setCursor(12,0);
-  lcd.print(dht.readTemperature());
-  printTemp();
-//  lcd.setCursor(0,1);
-//  lcd.print("Umidade:");
-//  lcd.setCursor(12,1);
-//  lcd.print(dht.readHumidity());
-  lcd.setCursor(0,1);
-  lcd.print(temp3);
-  lcd.setCursor(4,1);
-  lcd.print("  ");
-  lcd.setCursor(6,1);
-  lcd.print(temp2);
-  lcd.setCursor(10,1);
-  lcd.print("  ");
-  lcd.setCursor(12,1);
-  lcd.print(temp1);
-  delay(10000);
-  //lcd.noDisplay();
-  //delay(30000);
-  //lcd.print(Temperature);
+      if (count == 1) {
+        lcd.noBacklight();
+        Serial.println("Loop: noBacklight");
+        count = 0;
+        delay(1000);
+    }
+
+    if (i == 1) {
+        lcd.backlight(); //Acende o backlight
+        lcd.clear();// clear previous values from screen
+        lcd.print("Temp. Atual");
+        lcd.setCursor(12,0);
+        lcd.print(dht.readTemperature());
+        printTemp();
+        lcd.setCursor(0,1);
+        lcd.print(temp3);
+        lcd.setCursor(4,1);
+        lcd.print("  ");
+        lcd.setCursor(6,1);
+        lcd.print(temp2);
+        lcd.setCursor(10,1);
+        lcd.print("  ");
+        lcd.setCursor(12,1);
+        lcd.print(temp1);
+        Serial.println("Loop: Temp");
+        i = 0;
+        timerWrite(timer1, 0); //reseta o temporizador1  
+        delay(1000);
+    }
+  
   //cODIGO TIMER
   //vTaskDelay(portMAX_DELAY); // wait as much as posible ...
 
