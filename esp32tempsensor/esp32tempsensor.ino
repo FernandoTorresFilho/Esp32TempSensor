@@ -10,8 +10,8 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 //#define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
 
 /*Put your SSID & Password*/
-const char* ssid = "FT-302B";  // Enter SSID here
-const char* password = "nando2012";  //Enter Password here
+const char* ssid = "xxx";  // Enter SSID here
+const char* password = "xxx";  //Enter Password here
 
 WebServer server(80);
 
